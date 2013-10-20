@@ -6,18 +6,18 @@
 
 using namespace KDevelop;
 
-K_PLUGIN_FACTORY(KDevbazaarFactory, registerPlugin<bazaarPlugin>();)
-K_EXPORT_PLUGIN(KDevbazaarFactory(
-    KAboutData("kdevbazaar", "kdevbazaar", ki18n("bazaar"),
-               "0.1", ki18n("An example plugin for KDevelop"), KAboutData::License_GPL)
+K_PLUGIN_FACTORY(KDevBazaarFactory, registerPlugin<BazaarPlugin>();)
+K_EXPORT_PLUGIN(KDevBazaarFactory(
+    KAboutData("kdevbazaar", "kdevbazaar", ki18n("Bazaar"),
+               "0.1", ki18n("A plugin to support bazaar version control systems"), KAboutData::License_BSD)
 ))
 
-bazaarPlugin::bazaarPlugin(QObject* parent, const QVariantList& args) : IPlugin(KDevbazaarFactory::componentData(), parent)
+BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) : IPlugin(KDevBazaarFactory::componentData(), parent)
 {
   Q_UNUSED(args);
 }
 
-bazaarPlugin::~bazaarPlugin()
+BazaarPlugin::~BazaarPlugin()
 {
 
 }

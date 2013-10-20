@@ -5,13 +5,13 @@
 
 #include <QtCore/QVariantList>
 
-class bazaarPlugin : public KDevelop::IPlugin
+class BazaarPlugin : public KDevelop::IPlugin
 {
     Q_OBJECT
     
 public:
-    explicit bazaarPlugin(QObject *parent, const QVariantList& args = QVariantList());
-    virtual ~bazaarPlugin();
+    explicit BazaarPlugin(QObject *parent, const QVariantList& args = QVariantList());
+    virtual ~BazaarPlugin();
 };
 
 #endif // BAZAAR_PLUGIN_H
