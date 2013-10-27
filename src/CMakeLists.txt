@@ -1,8 +1,9 @@
 
 set(kdevbazaar_PART_SRCS
     bazaarplugin.cpp
+    importmetadatawidget.cpp
 )
-
+kde4_add_ui_files(kdevbazaar_PART_SRCS importmetadatawidget.ui)
 kde4_add_plugin(kdevbazaar ${kdevbazaar_PART_SRCS})
 
 target_link_libraries(kdevbazaar
