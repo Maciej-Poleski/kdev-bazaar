@@ -3,6 +3,7 @@
 
 #include <interfaces/iplugin.h>
 #include <vcs/interfaces/idistributedversioncontrol.h>
+#include <vcs/vcspluginhelper.h>
 
 #include <QtCore/QVariantList>
 
@@ -37,7 +38,12 @@ public:
     virtual KDevelop::VcsJob* status(const KUrl::List& localLocations, RecursionMode recursion);
     virtual KDevelop::VcsJob* update(const KUrl::List& localLocations, const KDevelop::VcsRevision& rev, RecursionMode recursion);
     virtual KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const;
+    virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
 
+private:
+    bool isValidDirectory(const KUrl & dirPath);
+
+    KDevelop::VcsPluginHelper *_vcsPluginHelper;
 };
 
 #endif // BAZAAR_PLUGIN_H

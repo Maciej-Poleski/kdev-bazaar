@@ -1,12 +1,15 @@
 #include "bazaarplugin.h"
 
 #include <QtCore/QDir>
+#include <QtGui/QMenu>
 
 #include <KPluginFactory>
 #include <KLocale>
 #include <KAboutData>
 #include <vcs/widgets/standardvcslocationwidget.h>
 #include <vcs/dvcs/dvcsjob.h>
+#include <interfaces/contextmenuextension.h>
+#include <interfaces/context.h>
 
 #include "importmetadatawidget.h"
 
@@ -31,12 +34,14 @@ static QDir workingCopy(const KUrl& path)
     return dir;
 }
 
-BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) : IPlugin(KDevBazaarFactory::componentData(), parent)
+BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) :
+    IPlugin(KDevBazaarFactory::componentData(), parent),
+    _vcsPluginHelper(new KDevelop::VcsPluginHelper(this, this))
 {
     // TODO: check if there is bzr executable
 
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::IBasicVersionControl )
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::IDistributedVersionControl )
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBasicVersionControl)
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IDistributedVersionControl)
 
     setObjectName("Bazaar");
 }
@@ -54,7 +59,7 @@ VcsJob* BazaarPlugin::add(const KUrl::List& localLocations, IBasicVersionControl
 {
     DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
     job->setType(VcsJob::Add);
-    *job << "bzr" << (recursion==Recursive? "add": "add --no-recurse")<< localLocations;
+    *job << "bzr" << (recursion == Recursive ? "add" : "add --no-recurse") << localLocations;
     return job;
 }
 
@@ -65,17 +70,14 @@ VcsJob* BazaarPlugin::annotate(const KUrl& localLocation, const VcsRevision& rev
 
 VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-    if(recursion==Recursive)
-    {
+    if (recursion == Recursive) {
         QDir dir = workingCopy(localLocations[0]);
         DVcsJob* job = new DVcsJob(dir, this);
         job->setType(VcsJob::Commit);
 
-        *job << "bzr" << "commit"<<localLocations << "-m" << message;
+        *job << "bzr" << "commit" << localLocations << "-m" << message;
         return job;
-    }
-    else
-    {
+    } else {
         // TODO: Consider this situation
     }
 }
@@ -173,3 +175,34 @@ VcsLocationWidget* BazaarPlugin::vcsLocation(QWidget* parent) const
     return new KDevelop::StandardVcsLocationWidget(parent);
 }
 
+bool BazaarPlugin::isValidDirectory(const KUrl& dirPath)
+{
+    QDir dir = workingCopy(dirPath);
+
+    return dir.cd(".bzr") && dir.exists("branch");
+}
+
+ContextMenuExtension BazaarPlugin::contextMenuExtension(Context* context)
+{
+    _vcsPluginHelper->setupFromContext(context);
+    KUrl::List const& ctxUrlList = _vcsPluginHelper->contextUrlList();
+
+    bool isWorkingDirectory = false;
+    foreach (const KUrl & url, ctxUrlList) {
+        if (isValidDirectory(url)) {
+            isWorkingDirectory = true;
+            break;
+        }
+    }
+
+    if (!isWorkingDirectory) { // Not part of a repository
+        return ContextMenuExtension();
+    }
+
+    QMenu* menu = _vcsPluginHelper->commonActions();
+
+    ContextMenuExtension menuExt;
+    menuExt.addAction(ContextMenuExtension::VcsGroup, menu->menuAction());
+
+    return menuExt;
+}
