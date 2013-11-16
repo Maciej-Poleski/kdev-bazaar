@@ -1,5 +1,6 @@
 
 set(kdevbazaar_PART_SRCS
+    bzrannotatetask.cpp
     bazaarplugin.cpp
     importmetadatawidget.cpp
 )

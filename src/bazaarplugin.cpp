@@ -1,6 +1,7 @@
 #include "bazaarplugin.h"
 
 #include <QtCore/QDir>
+#include <QDateTime>
 #include <QtGui/QMenu>
 
 #include <KPluginFactory>
@@ -8,10 +9,12 @@
 #include <KAboutData>
 #include <vcs/widgets/standardvcslocationwidget.h>
 #include <vcs/dvcs/dvcsjob.h>
+#include <vcs/vcsannotation.h>
 #include <interfaces/contextmenuextension.h>
 #include <interfaces/context.h>
 
 #include "importmetadatawidget.h"
+#include "bzrannotatetask.h"
 
 using namespace KDevelop;
 
@@ -32,6 +35,15 @@ static QDir workingCopy(const KUrl& path)
     while (!dir.exists(".bzr") && dir.cdUp());
 
     return dir;
+}
+
+/**
+ * Translate VcsRevision into Revision Identifier accepted by Bazaar.
+ */
+static QString getRevisionSpec(const VcsRevision& revision)
+{
+    // TODO: implementation
+    return "last:1";
 }
 
 BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) :
@@ -65,7 +77,17 @@ VcsJob* BazaarPlugin::add(const KUrl::List& localLocations, IBasicVersionControl
 
 VcsJob* BazaarPlugin::annotate(const KUrl& localLocation, const VcsRevision& rev)
 {
+    DVcsJob* job = new DVcsJob(workingCopy(localLocation), this, KDevelop::OutputJob::Silent);
+    job->setType(VcsJob::Annotate);
+    *job << "bzr" << "annotate" << "--all" << "-r" << getRevisionSpec(rev) << localLocation;
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrAnnotateOutput(KDevelop::DVcsJob*)));
+    return job;
+}
 
+void BazaarPlugin::parseBzrAnnotateOutput(KDevelop::DVcsJob* job)
+{
+    BzrAnnotateTask *task=new BzrAnnotateTask(job);
+    task->start();
 }
 
 VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)

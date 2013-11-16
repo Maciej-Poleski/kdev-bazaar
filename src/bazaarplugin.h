@@ -7,12 +7,17 @@
 
 #include <QtCore/QVariantList>
 
+namespace KDevelop
+{
+class DVcsJob;
+}
+
 class BazaarPlugin : public KDevelop::IPlugin, public KDevelop::IDistributedVersionControl
 {
     Q_OBJECT
     Q_INTERFACES(KDevelop::IBasicVersionControl KDevelop::IDistributedVersionControl)
 public:
-    explicit BazaarPlugin(QObject *parent, const QVariantList& args = QVariantList());
+    explicit BazaarPlugin(QObject* parent, const QVariantList& args = QVariantList());
     virtual ~BazaarPlugin();
 
     virtual QString name() const;
@@ -41,9 +46,11 @@ public:
     virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
 
 private:
-    bool isValidDirectory(const KUrl & dirPath);
+    bool isValidDirectory(const KUrl& dirPath);
 
-    KDevelop::VcsPluginHelper *_vcsPluginHelper;
+    KDevelop::VcsPluginHelper* _vcsPluginHelper;
+private slots:
+    void parseBzrAnnotateOutput(KDevelop::DVcsJob*);
 };
 
 #endif // BAZAAR_PLUGIN_H

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(bazaar)
 
+set(CMAKE_CXX_FLAGS "-std=c++11")
+
 find_package(KDE4 REQUIRED)
 find_package(KDevPlatform REQUIRED)
 include (KDE4Defaults)
