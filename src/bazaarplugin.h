@@ -49,8 +49,6 @@ private:
     bool isValidDirectory(const KUrl& dirPath);
 
     KDevelop::VcsPluginHelper* _vcsPluginHelper;
-private slots:
-    void parseBzrAnnotateOutput(KDevelop::DVcsJob*);
 };
 
 #endif // BAZAAR_PLUGIN_H

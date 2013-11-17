@@ -14,7 +14,7 @@
 #include <interfaces/context.h>
 
 #include "importmetadatawidget.h"
-#include "bzrannotatetask.h"
+#include "bzrannotatejob.h"
 
 using namespace KDevelop;
 
@@ -77,17 +77,8 @@ VcsJob* BazaarPlugin::add(const KUrl::List& localLocations, IBasicVersionControl
 
 VcsJob* BazaarPlugin::annotate(const KUrl& localLocation, const VcsRevision& rev)
 {
-    DVcsJob* job = new DVcsJob(workingCopy(localLocation), this, KDevelop::OutputJob::Silent);
-    job->setType(VcsJob::Annotate);
-    *job << "bzr" << "annotate" << "--all" << "-r" << getRevisionSpec(rev) << localLocation;
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrAnnotateOutput(KDevelop::DVcsJob*)));
+    VcsJob* job = new BzrAnnotateJob(workingCopy(localLocation), getRevisionSpec(rev), localLocation, this, KDevelop::OutputJob::Silent);
     return job;
-}
-
-void BazaarPlugin::parseBzrAnnotateOutput(KDevelop::DVcsJob* job)
-{
-    BzrAnnotateTask *task=new BzrAnnotateTask(job);
-    task->start();
 }
 
 VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
