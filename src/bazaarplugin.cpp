@@ -13,8 +13,10 @@
 #include <interfaces/contextmenuextension.h>
 #include <interfaces/context.h>
 
+#include "utilities.h"
 #include "importmetadatawidget.h"
 #include "bzrannotatejob.h"
+#include "copyjob.h"
 
 using namespace KDevelop;
 
@@ -23,19 +25,6 @@ K_EXPORT_PLUGIN(KDevBazaarFactory(
                     KAboutData("kdevbazaar", "kdevbazaar", ki18n("Bazaar"),
                                "0.1", ki18n("A plugin to support bazaar version control systems"), KAboutData::License_BSD)
                 ))
-
-static QDir toQDir(const KUrl& url)
-{
-    return QDir(url.toLocalFile());
-}
-
-static QDir workingCopy(const KUrl& path)
-{
-    QDir dir = toQDir(path);
-    while (!dir.exists(".bzr") && dir.cdUp());
-
-    return dir;
-}
 
 /**
  * Translate VcsRevision into Revision Identifier accepted by Bazaar.
@@ -97,7 +86,7 @@ VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLoca
 
 VcsJob* BazaarPlugin::copy(const KUrl& localLocationSrc, const KUrl& localLocationDstn)
 {
-
+    return new CopyJob(localLocationSrc,localLocationDstn,this);
 }
 
 VcsImportMetadataWidget* BazaarPlugin::createImportMetadataWidget(QWidget* parent)

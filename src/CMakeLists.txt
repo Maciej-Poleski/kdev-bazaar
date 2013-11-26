@@ -3,6 +3,8 @@ set(kdevbazaar_PART_SRCS
     bzrannotatejob.cpp
     bazaarplugin.cpp
     importmetadatawidget.cpp
+    utilities.cpp
+    copyjob.cpp
 )
 kde4_add_ui_files(kdevbazaar_PART_SRCS importmetadatawidget.ui)
 kde4_add_plugin(kdevbazaar ${kdevbazaar_PART_SRCS})
