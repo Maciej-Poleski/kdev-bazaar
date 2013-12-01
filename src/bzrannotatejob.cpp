@@ -34,7 +34,7 @@ void BzrAnnotateJob::start()
     if (_status != KDevelop::VcsJob::JobNotStarted)
         return;
     KDevelop::DVcsJob* job = new KDevelop::DVcsJob(_workingDir, _vcsPlugin, KDevelop::OutputJob::Silent);
-    *job << "bzr" << "annotate" << "--all" << "-r" << _revisionSpec << _localLocation;
+    *job << "bzr" << "annotate" << "--all" << _revisionSpec << _localLocation;
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrAnnotateOutput(KDevelop::DVcsJob*)));
     _status = KDevelop::VcsJob::JobRunning;
     _job = job;

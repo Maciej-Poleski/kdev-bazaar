@@ -44,6 +44,9 @@ public:
     virtual KDevelop::VcsJob* update(const KUrl::List& localLocations, const KDevelop::VcsRevision& rev, RecursionMode recursion);
     virtual KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const;
     virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
+    
+private slots:
+    void parseBzrDiffOutput(KDevelop::DVcsJob*);
 
 private:
     bool isValidDirectory(const KUrl& dirPath);

@@ -26,15 +26,6 @@ K_EXPORT_PLUGIN(KDevBazaarFactory(
                                "0.1", ki18n("A plugin to support bazaar version control systems"), KAboutData::License_BSD)
                 ))
 
-/**
- * Translate VcsRevision into Revision Identifier accepted by Bazaar.
- */
-static QString getRevisionSpec(const VcsRevision& revision)
-{
-    // TODO: implementation
-    return "last:1";
-}
-
 BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) :
     IPlugin(KDevBazaarFactory::componentData(), parent),
     _vcsPluginHelper(new KDevelop::VcsPluginHelper(this, this))
@@ -86,7 +77,7 @@ VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLoca
 
 VcsJob* BazaarPlugin::copy(const KUrl& localLocationSrc, const KUrl& localLocationDstn)
 {
-    return new CopyJob(localLocationSrc,localLocationDstn,this);
+    return new CopyJob(localLocationSrc, localLocationDstn, this);
 }
 
 VcsImportMetadataWidget* BazaarPlugin::createImportMetadataWidget(QWidget* parent)
@@ -96,12 +87,32 @@ VcsImportMetadataWidget* BazaarPlugin::createImportMetadataWidget(QWidget* paren
 
 VcsJob* BazaarPlugin::createWorkingCopy(const VcsLocation& sourceRepository, const KUrl& destinationDirectory, IBasicVersionControl::RecursionMode recursion)
 {
-
+    (void)recursion;
+    // What is the purpose of recursion parameter?
+    DVcsJob* job = new DVcsJob(toQDir(destinationDirectory), this);
+    job->setType(VcsJob::Import);
+    *job << "bzr" << "branch" << sourceRepository.localUrl().url() << destinationDirectory;
+    return job;
 }
 
 VcsJob* BazaarPlugin::diff(const KUrl& fileOrDirectory, const VcsRevision& srcRevision, const VcsRevision& dstRevision, VcsDiff::Type, IBasicVersionControl::RecursionMode recursion)
 {
+    (void)recursion;
+    DVcsJob* job = new DVcsJob(workingCopy(fileOrDirectory), this, KDevelop::OutputJob::Silent);
+    job->setType(VcsJob::Diff);
+    *job << "bzr" << "diff"<< "-p1" << getRevisionSpacRange(srcRevision, dstRevision) << fileOrDirectory;
 
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseBzrDiffOutput(KDevelop::DVcsJob*)));
+    return job;
+}
+
+void BazaarPlugin::parseBzrDiffOutput(DVcsJob* job)
+{
+    VcsDiff diff;
+    diff.setDiff(job->output());
+    diff.setBaseDiff(KUrl(job->directory().absolutePath()));
+
+    job->setResults(QVariant::fromValue(diff));
 }
 
 VcsJob* BazaarPlugin::init(const KUrl& localRepositoryRoot)
