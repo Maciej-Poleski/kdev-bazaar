@@ -23,4 +23,6 @@ QString getRevisionSpec(const KDevelop::VcsRevision& revision);
 QString getRevisionSpacRange(const KDevelop::VcsRevision& begin,
                              const KDevelop::VcsRevision& end);
 
+bool isValidDirectory(const KUrl& dirPath);
+
 #endif // UTILITIES_H

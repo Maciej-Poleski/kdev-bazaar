@@ -46,11 +46,9 @@ public:
     virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
     
 private slots:
-    void parseBzrDiffOutput(KDevelop::DVcsJob*);
+    void parseBzrStatus(KDevelop::DVcsJob*);
 
 private:
-    bool isValidDirectory(const KUrl& dirPath);
-
     KDevelop::VcsPluginHelper* _vcsPluginHelper;
 };
 

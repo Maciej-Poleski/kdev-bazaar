@@ -9,7 +9,6 @@
 #include <KAboutData>
 #include <vcs/widgets/standardvcslocationwidget.h>
 #include <vcs/dvcs/dvcsjob.h>
-#include <vcs/vcsannotation.h>
 #include <interfaces/contextmenuextension.h>
 #include <interfaces/context.h>
 
@@ -17,6 +16,7 @@
 #include "importmetadatawidget.h"
 #include "bzrannotatejob.h"
 #include "copyjob.h"
+#include "diffjob.h"
 
 using namespace KDevelop;
 
@@ -98,21 +98,8 @@ VcsJob* BazaarPlugin::createWorkingCopy(const VcsLocation& sourceRepository, con
 VcsJob* BazaarPlugin::diff(const KUrl& fileOrDirectory, const VcsRevision& srcRevision, const VcsRevision& dstRevision, VcsDiff::Type, IBasicVersionControl::RecursionMode recursion)
 {
     (void)recursion;
-    DVcsJob* job = new DVcsJob(workingCopy(fileOrDirectory), this, KDevelop::OutputJob::Silent);
-    job->setType(VcsJob::Diff);
-    *job << "bzr" << "diff"<< "-p1" << getRevisionSpacRange(srcRevision, dstRevision) << fileOrDirectory;
-
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseBzrDiffOutput(KDevelop::DVcsJob*)));
+    VcsJob* job = new DiffJob(workingCopy(fileOrDirectory), getRevisionSpacRange(srcRevision, dstRevision), fileOrDirectory, this);
     return job;
-}
-
-void BazaarPlugin::parseBzrDiffOutput(DVcsJob* job)
-{
-    VcsDiff diff;
-    diff.setDiff(job->output());
-    diff.setBaseDiff(KUrl(job->directory().absolutePath()));
-
-    job->setResults(QVariant::fromValue(diff));
 }
 
 VcsJob* BazaarPlugin::init(const KUrl& localRepositoryRoot)
@@ -125,74 +112,95 @@ VcsJob* BazaarPlugin::init(const KUrl& localRepositoryRoot)
 
 bool BazaarPlugin::isVersionControlled(const KUrl& localLocation)
 {
-
+    QDir workCopy=workingCopy(localLocation);
+    DVcsJob* job = new DVcsJob(workCopy, this, OutputJob::Silent);
+    job->setType(VcsJob::Unknown);
+    *job << "bzr" << "ls" << "--from-root" << "-R" << "-V";
+    job->exec();
+    if (job->status() == VcsJob::JobSucceeded) {
+        QList<QFileInfo> filesAndDirectoriesList;
+        for (QString fod : job->output().split('\n')) {
+            filesAndDirectoriesList.append(QFileInfo(workCopy.absolutePath()+QDir::separator()+fod));
+        }
+        QFileInfo fi(localLocation.toLocalFile());
+        if (fi.isDir() || fi.isFile()) {
+            QFileInfo file(localLocation.toLocalFile());
+            return filesAndDirectoriesList.contains(file);
+        }
+    }
+    return false;
 }
+
+#include <QtCore/QDebug>
 
 VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, long unsigned int limit)
 {
-
+    qCritical() << "log";
 }
 
 VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, const VcsRevision& limit)
 {
-
+    qCritical() << "log";
 }
 
 VcsJob* BazaarPlugin::move(const KUrl& localLocationSrc, const KUrl& localLocationDst)
 {
-
+    qCritical() << "move";
 }
 
 VcsJob* BazaarPlugin::pull(const VcsLocation& localOrRepoLocationSrc, const KUrl& localRepositoryLocation)
 {
-
+    qCritical() << "pull";
 }
 
 VcsJob* BazaarPlugin::push(const KUrl& localRepositoryLocation, const VcsLocation& localOrRepoLocationDst)
 {
-
+    qCritical() << "push";
 }
 
 VcsJob* BazaarPlugin::remove(const KUrl::List& localLocations)
 {
-
+    qCritical() << "remove";
 }
 
 VcsJob* BazaarPlugin::repositoryLocation(const KUrl& localLocation)
 {
-
+    qCritical() << "repositoryLocation";
 }
 
 VcsJob* BazaarPlugin::resolve(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-
+    qCritical() << "resolve";
 }
 
 VcsJob* BazaarPlugin::revert(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-
+    qCritical() << "revert";
 }
 
 VcsJob* BazaarPlugin::status(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
+    (void)recursion;
+    DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
+    job->setType(VcsJob::Status);
+    *job << "bzr" <<"status"<<"--short"<<"--no-pending" << localLocations;
+    connect(job,SIGNAL(readyForParsing(KDevelop::DVcsJob*)),this,SLOT(parseBzrStatus(KDevelop::DVcsJob*)));
+    return job;
+}
 
+void BazaarPlugin::parseBzrStatus(DVcsJob* job)
+{
+    //TODO implementation
 }
 
 VcsJob* BazaarPlugin::update(const KUrl::List& localLocations, const VcsRevision& rev, IBasicVersionControl::RecursionMode recursion)
 {
-
+    qCritical() << "update";
 }
 
 VcsLocationWidget* BazaarPlugin::vcsLocation(QWidget* parent) const
 {
     return new KDevelop::StandardVcsLocationWidget(parent);
-}
-
-bool BazaarPlugin::isValidDirectory(const KUrl& dirPath)
-{
-    QDir dir = workingCopy(dirPath);
-
-    return dir.cd(".bzr") && dir.exists("branch");
 }
 
 ContextMenuExtension BazaarPlugin::contextMenuExtension(Context* context)

@@ -67,6 +67,12 @@ QString getRevisionSpacRange(const KDevelop::VcsRevision& begin,
                    + ".." + QString::number(end.revisionValue().toLongLong());
         }
     }
-    return "";
+    return "";      // Don't know how to handle this situation
 }
 
+bool isValidDirectory(const KUrl& dirPath)
+{
+    QDir dir = workingCopy(dirPath);
+
+    return dir.cd(".bzr") && dir.exists("branch");
+}

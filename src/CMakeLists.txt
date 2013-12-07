@@ -1,5 +1,6 @@
 
 set(kdevbazaar_PART_SRCS
+    diffjob.cpp
     bzrannotatejob.cpp
     bazaarplugin.cpp
     importmetadatawidget.cpp
