@@ -1,7 +1,13 @@
 #include "utilities.h"
 
+#include <QtCore/QDebug>
+#include <QtCore/QDateTime>
+
 #include <KUrl>
+
 #include <vcs/vcsrevision.h>
+#include <vcs/vcsstatusinfo.h>
+#include <vcs/vcsevent.h>
 
 QDir toQDir(const KUrl& url)
 {
@@ -19,9 +25,10 @@ QDir workingCopy(const KUrl& path)
 QString getRevisionSpec(const KDevelop::VcsRevision& revision)
 {
     if (revision.revisionType() == KDevelop::VcsRevision::Special) {
-        if (revision.specialType() == KDevelop::VcsRevision::Base ||
-                revision.specialType() == KDevelop::VcsRevision::Head)
+        if (revision.specialType() == KDevelop::VcsRevision::Head)
             return "-rlast:1";
+        else if (revision.specialType() == KDevelop::VcsRevision::Base)
+            return "";  // Workaround strange KDevelop behaviour
         else if (revision.specialType() == KDevelop::VcsRevision::Working)
             return "";
         else if (revision.specialType() == KDevelop::VcsRevision::Start)
@@ -29,12 +36,33 @@ QString getRevisionSpec(const KDevelop::VcsRevision& revision)
         else
             return "";  // Don't know how to handle this situation
     } else if (revision.revisionType() == KDevelop::VcsRevision::GlobalNumber)
-        return QString("-r") + revision.revisionValue().toLongLong();
+        return QString("-r") + QString::number(revision.revisionValue().toLongLong());
     else
         return "";      // Don't know how to handle this situation
 }
 
-QString getRevisionSpacRange(const KDevelop::VcsRevision& begin,
+QString getRevisionSpecRange(const KDevelop::VcsRevision& end)
+{
+    QString revisionPart;
+    if (end.revisionType() == KDevelop::VcsRevision::Special) {
+        if (end.specialType() == KDevelop::VcsRevision::Head)
+            revisionPart = "-r..last:1";
+        else if (end.specialType() == KDevelop::VcsRevision::Base)
+            revisionPart = "-r..last:1"; // Workaround strange KDevelop behaviour
+        else if (end.specialType() == KDevelop::VcsRevision::Working)
+            revisionPart = "";
+        else if (end.specialType() == KDevelop::VcsRevision::Start)
+            revisionPart = "-..r1";
+        else
+            revisionPart = ""; // Don't know how to handle this situation
+    } else if (end.revisionType() == KDevelop::VcsRevision::GlobalNumber)
+        revisionPart = QString("-r") + QString::number(end.revisionValue().toLongLong());
+    else
+        revisionPart = "";    // Don't know how to handle this situation
+    return revisionPart;
+}
+
+QString getRevisionSpecRange(const KDevelop::VcsRevision& begin,
                              const KDevelop::VcsRevision& end)
 {
     if (begin.revisionType() == KDevelop::VcsRevision::Special) {
@@ -75,4 +103,71 @@ bool isValidDirectory(const KUrl& dirPath)
     QDir dir = workingCopy(dirPath);
 
     return dir.cd(".bzr") && dir.exists("branch");
+}
+
+KDevelop::VcsStatusInfo parseVcsStatusInfoLine(const QString& line)
+{
+    QStringList tokens = line.split(' ', QString::SkipEmptyParts);
+    KDevelop::VcsStatusInfo result;
+    if (tokens.size() < 2) // Don't know how to handle this situation (it is an error)
+        return result;
+    result.setUrl(tokens.back());
+    if (tokens[0] == "M") {
+        result.setState(KDevelop::VcsStatusInfo::ItemModified);
+    } else if (tokens[0] == "C") {
+        result.setState(KDevelop::VcsStatusInfo::ItemHasConflicts);
+    } else if (tokens[0] == "+N") {
+        result.setState(KDevelop::VcsStatusInfo::ItemAdded);
+    } else if (tokens[0] == "?") {
+        result.setState(KDevelop::VcsStatusInfo::ItemUnknown);
+    } else if (tokens[0] == "D") {
+        result.setState(KDevelop::VcsStatusInfo::ItemDeleted);
+    } else {
+        result.setState(KDevelop::VcsStatusInfo::ItemUserState);
+        qWarning() << "Unsupported status: " << tokens[0];
+    }
+    return result;
+}
+
+QString concatenatePath(const QDir& workingCopy, const KUrl& pathInWorkingCopy)
+{
+    return QFileInfo(workingCopy.absolutePath() + QDir::separator()
+                     + pathInWorkingCopy.toLocalFile()).absoluteFilePath();
+}
+
+KDevelop::VcsEvent parseBzrLogPart(const QString& output)
+{
+    const QStringList outputLines = output.split('\n');
+    KDevelop::VcsEvent commitInfo;
+    bool atMessage = false;
+    QString message;
+    for (QString line : outputLines) {
+        if (!atMessage) {
+            if (line.startsWith("revno")) {
+                QString revno = line.mid(QString("revno: ").length());
+                revno = revno.left(revno.indexOf(' '));
+                KDevelop::VcsRevision revision;
+                revision.setRevisionValue(revno.toLongLong(), KDevelop::VcsRevision::GlobalNumber);
+                commitInfo.setRevision(revision);
+            } else if (line.startsWith("committer: ")) {
+                QString commiter = line.mid(QString("committer: ").length());
+                commitInfo.setAuthor(commiter);     // Author goes after commiter, but only if is different
+            } else if (line.startsWith("author")) {
+                QString author = line.mid(QString("author: ").length());
+                commitInfo.setAuthor(author);       // It may override commiter (In fact commiter is not supported by VcsEvent)
+            } else if (line.startsWith("timestamp")) {
+                const QString formatString = "yyyy-MM-dd hh:mm:ss";
+                QString timestamp = line.mid(QString("timestamp: ddd ").length(), formatString.length());
+                commitInfo.setDate(QDateTime::fromString(timestamp, formatString));
+            } else if (line.startsWith("message")) {
+                atMessage = true;
+            }
+        } else {
+            message += line.trimmed() + "\n";
+        }
+    }
+    if (atMessage)
+        commitInfo.setMessage(message.trimmed());
+    // TODO parse status section
+    return commitInfo;
 }

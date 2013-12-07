@@ -46,7 +46,8 @@ public:
     virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
     
 private slots:
-    void parseBzrStatus(KDevelop::DVcsJob*);
+    void parseBzrStatus(KDevelop::DVcsJob* job);
+    void parseBzrLog(KDevelop::DVcsJob* job);
 
 private:
     KDevelop::VcsPluginHelper* _vcsPluginHelper;

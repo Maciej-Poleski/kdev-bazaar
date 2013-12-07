@@ -109,7 +109,8 @@ void BzrAnnotateJob::parseBzrLog(KDevelop::DVcsJob* job)
     for (QString line : outputLines) {
         if (!atMessage) {
             if (line.startsWith("revno")) {
-                QString revno = line.right(line.length() - 1 - line.lastIndexOf(' '));
+                QString revno = line.mid(QString("revno: ").length());
+                revno=revno.left(revno.indexOf(' '));
                 revision = revno.toULong();
                 KDevelop::VcsRevision revision;
                 revision.setRevisionValue(revno.toLongLong(), KDevelop::VcsRevision::GlobalNumber);

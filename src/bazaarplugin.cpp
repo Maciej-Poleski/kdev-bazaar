@@ -9,6 +9,7 @@
 #include <KAboutData>
 #include <vcs/widgets/standardvcslocationwidget.h>
 #include <vcs/dvcs/dvcsjob.h>
+#include <vcs/vcsstatusinfo.h>
 #include <interfaces/contextmenuextension.h>
 #include <interfaces/context.h>
 
@@ -98,7 +99,7 @@ VcsJob* BazaarPlugin::createWorkingCopy(const VcsLocation& sourceRepository, con
 VcsJob* BazaarPlugin::diff(const KUrl& fileOrDirectory, const VcsRevision& srcRevision, const VcsRevision& dstRevision, VcsDiff::Type, IBasicVersionControl::RecursionMode recursion)
 {
     (void)recursion;
-    VcsJob* job = new DiffJob(workingCopy(fileOrDirectory), getRevisionSpacRange(srcRevision, dstRevision), fileOrDirectory, this);
+    VcsJob* job = new DiffJob(workingCopy(fileOrDirectory), getRevisionSpecRange(srcRevision, dstRevision), fileOrDirectory, this);
     return job;
 }
 
@@ -112,7 +113,7 @@ VcsJob* BazaarPlugin::init(const KUrl& localRepositoryRoot)
 
 bool BazaarPlugin::isVersionControlled(const KUrl& localLocation)
 {
-    QDir workCopy=workingCopy(localLocation);
+    QDir workCopy = workingCopy(localLocation);
     DVcsJob* job = new DVcsJob(workCopy, this, OutputJob::Silent);
     job->setType(VcsJob::Unknown);
     *job << "bzr" << "ls" << "--from-root" << "-R" << "-V";
@@ -120,7 +121,7 @@ bool BazaarPlugin::isVersionControlled(const KUrl& localLocation)
     if (job->status() == VcsJob::JobSucceeded) {
         QList<QFileInfo> filesAndDirectoriesList;
         for (QString fod : job->output().split('\n')) {
-            filesAndDirectoriesList.append(QFileInfo(workCopy.absolutePath()+QDir::separator()+fod));
+            filesAndDirectoriesList.append(QFileInfo(workCopy.absolutePath() + QDir::separator() + fod));
         }
         QFileInfo fi(localLocation.toLocalFile());
         if (fi.isDir() || fi.isFile()) {
@@ -131,17 +132,37 @@ bool BazaarPlugin::isVersionControlled(const KUrl& localLocation)
     return false;
 }
 
-#include <QtCore/QDebug>
-
 VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, long unsigned int limit)
 {
-    qCritical() << "log";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocation), this);
+    job->setType(VcsJob::Log);
+    *job << "bzr" << "log" << "--long" << localLocation << getRevisionSpecRange(rev) << "-l" << QString::number(limit);
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrLog(KDevelop::DVcsJob*)));
+    return job;
 }
 
 VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, const VcsRevision& limit)
 {
-    qCritical() << "log";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocation), this);
+    job->setType(VcsJob::Log);
+    *job << "bzr" << "log" << "--long" << localLocation << getRevisionSpecRange(limit, rev);
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrLog(KDevelop::DVcsJob*)));
+    return job;
 }
+
+void BazaarPlugin::parseBzrLog(DVcsJob* job)
+{
+    QVariantList result;
+    for (QString part : job->output().split("------------------------------------------------------------", QString::SkipEmptyParts)) {
+        auto event = parseBzrLogPart(part);
+        if (event.revision().revisionType() != VcsRevision::Invalid)
+            result.append(QVariant::fromValue(event));
+    }
+    job->setResults(result);
+}
+
+#include <QtCore/QDebug>
+
 
 VcsJob* BazaarPlugin::move(const KUrl& localLocationSrc, const KUrl& localLocationDst)
 {
@@ -183,14 +204,35 @@ VcsJob* BazaarPlugin::status(const KUrl::List& localLocations, IBasicVersionCont
     (void)recursion;
     DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
     job->setType(VcsJob::Status);
-    *job << "bzr" <<"status"<<"--short"<<"--no-pending" << localLocations;
-    connect(job,SIGNAL(readyForParsing(KDevelop::DVcsJob*)),this,SLOT(parseBzrStatus(KDevelop::DVcsJob*)));
+    *job << "bzr" << "status" << "--short" << "--no-pending" << "--no-classify" << localLocations;
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrStatus(KDevelop::DVcsJob*)));
     return job;
 }
 
 void BazaarPlugin::parseBzrStatus(DVcsJob* job)
 {
-    //TODO implementation
+    QVariantList result;
+    QSet<QString> filesWithStatus;
+    QDir workingCopy = job->directory();
+    for (QString line : job->output().split('\n')) {
+        auto status = parseVcsStatusInfoLine(line);
+        result.append(QVariant::fromValue(status));
+        filesWithStatus.insert(concatenatePath(workingCopy, status.url()));
+    }
+
+    QStringList command = job->dvcsCommand();
+    for (auto it = command.constBegin() + command.indexOf("--no-classify") + 1, itEnd = command.constEnd(); it != itEnd; ++it) {
+        QString path = QFileInfo(*it).absoluteFilePath();
+        if (!filesWithStatus.contains(path)) {
+            filesWithStatus.insert(path);
+            KDevelop::VcsStatusInfo status;
+            status.setState(VcsStatusInfo::ItemUpToDate);
+            status.setUrl(*it);
+            result.append(QVariant::fromValue(status));
+        }
+    }
+
+    job->setResults(result);
 }
 
 VcsJob* BazaarPlugin::update(const KUrl::List& localLocations, const VcsRevision& rev, IBasicVersionControl::RecursionMode recursion)
@@ -209,7 +251,7 @@ ContextMenuExtension BazaarPlugin::contextMenuExtension(Context* context)
     KUrl::List const& ctxUrlList = _vcsPluginHelper->contextUrlList();
 
     bool isWorkingDirectory = false;
-    foreach (const KUrl & url, ctxUrlList) {
+    for (const KUrl & url : ctxUrlList) {
         if (isValidDirectory(url)) {
             isWorkingDirectory = true;
             break;

@@ -6,6 +6,8 @@
 namespace KDevelop
 {
 class VcsRevision;
+class VcsStatusInfo;
+class VcsEvent;
 }
 
 class KUrl;
@@ -19,10 +21,17 @@ QDir workingCopy(const KUrl& path);
  */
 QString getRevisionSpec(const KDevelop::VcsRevision& revision);
 
+QString getRevisionSpecRange(const KDevelop::VcsRevision& end);
 
-QString getRevisionSpacRange(const KDevelop::VcsRevision& begin,
+QString getRevisionSpecRange(const KDevelop::VcsRevision& begin,
                              const KDevelop::VcsRevision& end);
 
 bool isValidDirectory(const KUrl& dirPath);
+
+KDevelop::VcsStatusInfo parseVcsStatusInfoLine(const QString& line);
+
+QString concatenatePath(const QDir& workingCopy, const KUrl& pathInWorkingCopy);
+
+KDevelop::VcsEvent parseBzrLogPart(const QString& output);
 
 #endif // UTILITIES_H
