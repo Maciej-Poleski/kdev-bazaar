@@ -177,7 +177,10 @@ VcsJob* BazaarPlugin::pull(const VcsLocation& localOrRepoLocationSrc, const KUrl
     // Information about repository must be provided at least once.
     DVcsJob* job = new DVcsJob(workingCopy(localRepositoryLocation), this);
     job->setType(VcsJob::VcsJob::Pull);
-    *job << "bzr" << "pull" << localOrRepoLocationSrc.localUrl();
+    *job << "bzr" << "pull";
+    if (!localOrRepoLocationSrc.localUrl().isEmpty()) {
+        *job << localOrRepoLocationSrc.localUrl();
+    }
     // localUrl always makes sense. Even on remote repositores which are handled
     // transparently.
     return job;
