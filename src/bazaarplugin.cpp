@@ -161,28 +161,48 @@ void BazaarPlugin::parseBzrLog(DVcsJob* job)
     job->setResults(result);
 }
 
-#include <QtCore/QDebug>
-
-
 VcsJob* BazaarPlugin::move(const KUrl& localLocationSrc, const KUrl& localLocationDst)
 {
-    qCritical() << "move";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocationSrc), this);
+    job->setType(VcsJob::VcsJob::Move);
+    *job << "bzr" << "move" << localLocationSrc << localLocationDst;
+    return job;
 }
 
 VcsJob* BazaarPlugin::pull(const VcsLocation& localOrRepoLocationSrc, const KUrl& localRepositoryLocation)
 {
-    qCritical() << "pull";
+    // API describes hg pull which is git fetch equivalent
+    // bzr has pull, but it succeds only if fast-forward is possible
+    // in other cases bzr merge should be used instead (bzr pull would fail)
+    // Information about repository must be provided at least once.
+    DVcsJob* job = new DVcsJob(workingCopy(localRepositoryLocation), this);
+    job->setType(VcsJob::VcsJob::Pull);
+    *job << "bzr" << "pull" << localOrRepoLocationSrc.localUrl();
+    // localUrl always makes sense. Even on remote repositores which are handled
+    // transparently.
+    return job;
 }
 
 VcsJob* BazaarPlugin::push(const KUrl& localRepositoryLocation, const VcsLocation& localOrRepoLocationDst)
 {
-    qCritical() << "push";
+    DVcsJob* job = new DVcsJob(workingCopy(localRepositoryLocation), this);
+    job->setType(VcsJob::VcsJob::Push);
+    *job << "bzr" << "push" << localOrRepoLocationDst.localUrl();
+    // localUrl always makes sense. Even on remote repositores which are handled
+    // transparently.
+    return job;
 }
 
 VcsJob* BazaarPlugin::remove(const KUrl::List& localLocations)
 {
-    qCritical() << "remove";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
+    job->setType(VcsJob::VcsJob::Remove);
+    *job << "bzr" << "remove" << localLocations;
+    return job;
 }
+
+#include <QtCore/QDebug>
+
 
 VcsJob* BazaarPlugin::repositoryLocation(const KUrl& localLocation)
 {
