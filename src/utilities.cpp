@@ -141,6 +141,9 @@ KDevelop::VcsEvent parseBzrLogPart(const QString& output)
     KDevelop::VcsEvent commitInfo;
     bool atMessage = false;
     QString message;
+    bool afterMessage = false;
+    QHash<QString, KDevelop::VcsItemEvent::Actions> fileToActionsMapping;
+    KDevelop::VcsItemEvent::Action currentAction;
     for (QString line : outputLines) {
         if (!atMessage) {
             if (line.startsWith("revno")) {
@@ -162,12 +165,47 @@ KDevelop::VcsEvent parseBzrLogPart(const QString& output)
             } else if (line.startsWith("message")) {
                 atMessage = true;
             }
-        } else {
-            message += line.trimmed() + "\n";
+        } else if (atMessage && !afterMessage) {
+            if (!line.isEmpty() && line[0].isSpace()) {
+                message += line.trimmed() + "\n";
+            } else if (!line.isEmpty()) {
+                afterMessage = true;
+                // leave atMessage = true
+                currentAction = parseActionDescription(line);
+            } // if line is empty - ignore and get next
+        } else if (afterMessage) {
+            if (!line.isEmpty() && !line[0].isSpace()) {
+                currentAction = parseActionDescription(line);
+            } else if (!line.isEmpty()) {
+                fileToActionsMapping[line.trimmed()] |= currentAction;
+            } // if line is empty - ignore and get next
         }
     }
     if (atMessage)
         commitInfo.setMessage(message.trimmed());
-    // TODO parse status section
+    for (auto i = fileToActionsMapping.begin(); i != fileToActionsMapping.end(); ++i) {
+        KDevelop::VcsItemEvent itemEvent;
+        itemEvent.setRepositoryLocation(i.key());
+        itemEvent.setActions(i.value());
+        commitInfo.addItem(itemEvent);
+    }
     return commitInfo;
 }
+
+KDevelop::VcsItemEvent::Action parseActionDescription(const QString& action)
+{
+    if (action == "added:") {
+        return KDevelop::VcsItemEvent::Added;
+    } else if (action == "modified:") {
+        return KDevelop::VcsItemEvent::Modified;
+    } else if (action == "removed:") {
+        return KDevelop::VcsItemEvent::Deleted;
+    } else if (action == "kind changed:") {
+        return KDevelop::VcsItemEvent::Replaced; // Best approximation
+    } else if (action.startsWith("renamed")) {
+        return KDevelop::VcsItemEvent::Modified; // Best approximation
+    } else {
+        qCritical("Unsupported action: %s at line %{line} in file %{file}",action.toLocal8Bit().constData());
+    }
+}
+

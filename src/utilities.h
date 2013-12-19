@@ -3,6 +3,8 @@
 
 #include <QtCore/QDir>
 
+#include <vcs/vcsevent.h>
+
 namespace KDevelop
 {
 class VcsRevision;
@@ -33,5 +35,7 @@ KDevelop::VcsStatusInfo parseVcsStatusInfoLine(const QString& line);
 QString concatenatePath(const QDir& workingCopy, const KUrl& pathInWorkingCopy);
 
 KDevelop::VcsEvent parseBzrLogPart(const QString& output);
+
+KDevelop::VcsItemEvent::Action parseActionDescription(const QString& action);
 
 #endif // UTILITIES_H

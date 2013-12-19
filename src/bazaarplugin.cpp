@@ -90,7 +90,7 @@ VcsJob* BazaarPlugin::createWorkingCopy(const VcsLocation& sourceRepository, con
 {
     (void)recursion;
     // What is the purpose of recursion parameter?
-    DVcsJob* job = new DVcsJob(toQDir(destinationDirectory), this);
+    DVcsJob* job = new DVcsJob(toQDir(sourceRepository.localUrl()), this);
     job->setType(VcsJob::Import);
     *job << "bzr" << "branch" << sourceRepository.localUrl().url() << destinationDirectory;
     return job;
@@ -136,7 +136,7 @@ VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, lon
 {
     DVcsJob* job = new DVcsJob(workingCopy(localLocation), this);
     job->setType(VcsJob::Log);
-    *job << "bzr" << "log" << "--long" << localLocation << getRevisionSpecRange(rev) << "-l" << QString::number(limit);
+    *job << "bzr" << "log" << "--long" << "-v" << localLocation << getRevisionSpecRange(rev) << "-l" << QString::number(limit);
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrLog(KDevelop::DVcsJob*)));
     return job;
 }
@@ -145,7 +145,7 @@ VcsJob* BazaarPlugin::log(const KUrl& localLocation, const VcsRevision& rev, con
 {
     DVcsJob* job = new DVcsJob(workingCopy(localLocation), this);
     job->setType(VcsJob::Log);
-    *job << "bzr" << "log" << "--long" << localLocation << getRevisionSpecRange(limit, rev);
+    *job << "bzr" << "log" << "--long" << "-v" << localLocation << getRevisionSpecRange(limit, rev);
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrLog(KDevelop::DVcsJob*)));
     return job;
 }
