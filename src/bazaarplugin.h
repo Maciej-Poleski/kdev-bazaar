@@ -20,6 +20,9 @@ public:
     explicit BazaarPlugin(QObject* parent, const QVariantList& args = QVariantList());
     virtual ~BazaarPlugin();
 
+    virtual bool hasError() const override;
+    virtual QString errorDescription() const override;
+
     virtual QString name() const override;
 
     virtual KDevelop::VcsJob* add(const KUrl::List& localLocations, RecursionMode recursion) override;
@@ -52,6 +55,8 @@ private slots:
 
 private:
     KDevelop::VcsPluginHelper* _vcsPluginHelper;
+    bool _hasError;
+    QString _errorDescription;
 };
 
 #endif // BAZAAR_PLUGIN_H

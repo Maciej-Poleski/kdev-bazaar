@@ -7,6 +7,8 @@
 #include <KPluginFactory>
 #include <KLocale>
 #include <KAboutData>
+#include <KStandardDirs>
+
 #include <vcs/widgets/standardvcslocationwidget.h>
 #include <vcs/dvcs/dvcsjob.h>
 #include <vcs/vcsstatusinfo.h>
@@ -31,7 +33,13 @@ BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) :
     IPlugin(KDevBazaarFactory::componentData(), parent),
     _vcsPluginHelper(new KDevelop::VcsPluginHelper(this, this))
 {
-    // TODO: check if there is bzr executable
+    Q_UNUSED(args); // What is this?
+    if (KStandardDirs::findExe("bzr").isEmpty()) {
+        _hasError = true;
+        _errorDescription = i18n("Bazaar is not installed (bzr executable not"
+                                 " found)");
+        return;
+    }
 
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBasicVersionControl)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IDistributedVersionControl)
@@ -311,4 +319,14 @@ ContextMenuExtension BazaarPlugin::contextMenuExtension(Context* context)
     menuExt.addAction(ContextMenuExtension::VcsGroup, menu->menuAction());
 
     return menuExt;
+}
+
+bool BazaarPlugin::hasError() const
+{
+    return _hasError;
+}
+
+QString BazaarPlugin::errorDescription() const
+{
+    return _errorDescription;
 }
