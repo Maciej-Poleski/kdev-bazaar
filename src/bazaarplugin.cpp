@@ -26,12 +26,12 @@ using namespace KDevelop;
 K_PLUGIN_FACTORY(KDevBazaarFactory, registerPlugin<BazaarPlugin>();)
 K_EXPORT_PLUGIN(KDevBazaarFactory(
                     KAboutData("kdevbazaar", "kdevbazaar", ki18n("Bazaar"),
-                               "0.1", ki18n("A plugin to support bazaar version control systems"), KAboutData::License_BSD)
+                               "0.1", ki18n("A plugin to support Bazaar version control system"), KAboutData::License_BSD)
                 ))
 
 BazaarPlugin::BazaarPlugin(QObject* parent, const QVariantList& args) :
     IPlugin(KDevBazaarFactory::componentData(), parent),
-    _vcsPluginHelper(new KDevelop::VcsPluginHelper(this, this))
+    _vcsPluginHelper(new KDevelop::VcsPluginHelper(this, this)), _hasError(false)
 {
     Q_UNUSED(args); // What is this?
     if (KStandardDirs::findExe("bzr").isEmpty()) {
