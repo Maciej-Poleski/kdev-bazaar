@@ -204,22 +204,38 @@ VcsJob* BazaarPlugin::remove(const KUrl::List& localLocations)
     return job;
 }
 
-#include <QtCore/QDebug>
-
-
 VcsJob* BazaarPlugin::repositoryLocation(const KUrl& localLocation)
 {
-    qCritical() << "repositoryLocation";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocation), this);
+    job->setType(VcsJob::VcsJob::Unknown);
+    *job << "bzr" << "root" << localLocation;   // It is only to make sure
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), this, SLOT(parseBzrRoot(KDevelop::DVcsJob*)));
+    return job;
+}
+
+void BazaarPlugin::parseBzrRoot(DVcsJob* job)
+{
+    QString filename = job->dvcsCommand()[2];
+    QString rootDirectory = job->output();
+    QString localFilename = QFileInfo(QUrl(filename).toLocalFile()).absoluteFilePath();
+    QString localRootDirectory = QFileInfo(rootDirectory).absolutePath();
+    QString result = localFilename.mid(localFilename.indexOf(rootDirectory) + rootDirectory.length());
+    job->setResults(QVariant::fromValue(result));
 }
 
 VcsJob* BazaarPlugin::resolve(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-    qCritical() << "resolve";
+    return add(localLocations,recursion);
+    // How to provide "a conflict solving dialog to the user"?
+    // In any case this plugin is unable to make any conflict.
 }
 
 VcsJob* BazaarPlugin::revert(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-    qCritical() << "revert";
+    DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
+    job->setType(VcsJob::VcsJob::Revert);
+    *job << "bzr" << "revert" << handleRecursion(localLocations,recursion);
+    return job;
 }
 
 VcsJob* BazaarPlugin::status(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
@@ -260,7 +276,15 @@ void BazaarPlugin::parseBzrStatus(DVcsJob* job)
 
 VcsJob* BazaarPlugin::update(const KUrl::List& localLocations, const VcsRevision& rev, IBasicVersionControl::RecursionMode recursion)
 {
-    qCritical() << "update";
+    // bzr update is stronger than API (it's effectively merge)
+    // the best approximation is bzr pull
+    DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
+    Q_UNUSED(recursion);
+    // recursion and file locations are ignored - we can update only whole
+    // working copy
+    job->setType(VcsJob::VcsJob::Update);
+    *job << "bzr" << "pull"<<getRevisionSpec(rev);
+    return job;
 }
 
 VcsLocationWidget* BazaarPlugin::vcsLocation(QWidget* parent) const

@@ -3,7 +3,10 @@
 
 #include <QtCore/QDir>
 
+#include <KUrl>
+
 #include <vcs/vcsevent.h>
+#include <vcs/interfaces/ibasicversioncontrol.h>
 
 namespace KDevelop
 {
@@ -16,6 +19,10 @@ class KUrl;
 
 QDir toQDir(const KUrl& url);
 
+/**
+ * @return working copy location of working copy which contains @p path. It
+ * may be any location inside working copy.
+ */
 QDir workingCopy(const KUrl& path);
 
 /**
@@ -37,5 +44,13 @@ QString concatenatePath(const QDir& workingCopy, const KUrl& pathInWorkingCopy);
 KDevelop::VcsEvent parseBzrLogPart(const QString& output);
 
 KDevelop::VcsItemEvent::Action parseActionDescription(const QString& action);
+
+/**
+ * Some methods in interface provides @p recursion parameter. In general
+ * Bazaar don't support this (only part of interface has native recursion
+ * handling support). This function removes directiories from list if
+ * we are in NonRecursive mode (as directory for self is not versioned).
+ */
+KUrl::List handleRecursion(const KUrl::List& listOfUrls, KDevelop::IBasicVersionControl::RecursionMode recursion);
 
 #endif // UTILITIES_H

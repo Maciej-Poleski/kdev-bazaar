@@ -210,3 +210,17 @@ KDevelop::VcsItemEvent::Action parseActionDescription(const QString& action)
     }
 }
 
+KUrl::List handleRecursion(const KUrl::List& listOfUrls, KDevelop::IBasicVersionControl::RecursionMode recursion)
+{
+    if (recursion == KDevelop::IBasicVersionControl::Recursive) {
+        return listOfUrls;      // Nothing to do
+    } else {
+        KUrl::List result;
+        for (const auto url : listOfUrls) {
+            if (url.isLocalFile() && QFileInfo(url.toLocalFile()).isFile()) {
+                result.push_back(url);
+            }
+        }
+        return result;
+    }
+}

@@ -1,11 +1,11 @@
 #ifndef BAZAAR_PLUGIN_H
 #define BAZAAR_PLUGIN_H
 
+#include <QtCore/QVariantList>
+
 #include <interfaces/iplugin.h>
 #include <vcs/interfaces/idistributedversioncontrol.h>
 #include <vcs/vcspluginhelper.h>
-
-#include <QtCore/QVariantList>
 
 namespace KDevelop
 {
@@ -44,10 +44,11 @@ public:
     virtual KDevelop::VcsJob* update(const KUrl::List& localLocations, const KDevelop::VcsRevision& rev, RecursionMode recursion) override;
     virtual KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const override;
     virtual KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context) override;
-    
+
 private slots:
     void parseBzrStatus(KDevelop::DVcsJob* job);
     void parseBzrLog(KDevelop::DVcsJob* job);
+    void parseBzrRoot(KDevelop::DVcsJob* job);
 
 private:
     KDevelop::VcsPluginHelper* _vcsPluginHelper;
