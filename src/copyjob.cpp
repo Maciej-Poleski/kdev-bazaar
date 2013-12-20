@@ -2,9 +2,10 @@
 
 #include <QtCore/QVariant>
 
-#include <interfaces/iplugin.h>
-#include <vcs/dvcs/dvcsjob.h>
 #include <KIO/CopyJob>
+
+#include <kdevplatform/interfaces/iplugin.h>
+#include <kdevplatform/vcs/dvcs/dvcsjob.h>
 
 #include "bazaarplugin.h"
 

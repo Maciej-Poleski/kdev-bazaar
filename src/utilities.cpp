@@ -5,9 +5,9 @@
 
 #include <KUrl>
 
-#include <vcs/vcsrevision.h>
-#include <vcs/vcsstatusinfo.h>
-#include <vcs/vcsevent.h>
+#include <kdevplatform/vcs/vcsrevision.h>
+#include <kdevplatform/vcs/vcsstatusinfo.h>
+#include <kdevplatform/vcs/vcsevent.h>
 
 QDir toQDir(const KUrl& url)
 {

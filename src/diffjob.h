@@ -1,9 +1,9 @@
 #ifndef DIFFJOB_H
 #define DIFFJOB_H
 
-#include <QVariant>
+#include <QtCore/QVariant>
 
-#include <vcs/vcsjob.h>
+#include <kdevplatform/vcs/vcsjob.h>
 
 namespace KDevelop
 {
@@ -18,7 +18,7 @@ class DiffJob : public KDevelop::VcsJob
     Q_OBJECT
 
 public:
-    DiffJob(const QDir& workingDir,const QString& revisionSpecRange,const KUrl& fileOrDirectory, BazaarPlugin* parent = 0, OutputJobVerbosity verbosity = OutputJob::Silent);
+    DiffJob(const QDir& workingDir, const QString& revisionSpecRange, const KUrl& fileOrDirectory, BazaarPlugin* parent = 0, OutputJobVerbosity verbosity = OutputJob::Silent);
 
     virtual KDevelop::IPlugin* vcsPlugin() const override;
     virtual KDevelop::VcsJob::JobStatus status() const override;

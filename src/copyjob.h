@@ -3,7 +3,7 @@
 
 #include <KUrl>
 
-#include <vcs/vcsjob.h>
+#include <kdevplatform/vcs/vcsjob.h>
 
 namespace KIO
 {

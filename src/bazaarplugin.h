@@ -3,9 +3,9 @@
 
 #include <QtCore/QVariantList>
 
-#include <interfaces/iplugin.h>
-#include <vcs/interfaces/idistributedversioncontrol.h>
-#include <vcs/vcspluginhelper.h>
+#include <kdevplatform/interfaces/iplugin.h>
+#include <kdevplatform/vcs/interfaces/idistributedversioncontrol.h>
+#include <kdevplatform/vcs/vcspluginhelper.h>
 
 namespace KDevelop
 {
@@ -55,6 +55,7 @@ private slots:
 
 private:
     KDevelop::VcsPluginHelper* _vcsPluginHelper;
+    
     bool _hasError;
     QString _errorDescription;
 };

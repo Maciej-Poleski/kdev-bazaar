@@ -1,7 +1,7 @@
 #include "bazaarplugin.h"
 
 #include <QtCore/QDir>
-#include <QDateTime>
+#include <QtCore/QDateTime>
 #include <QtGui/QMenu>
 
 #include <KPluginFactory>
@@ -9,11 +9,11 @@
 #include <KAboutData>
 #include <KStandardDirs>
 
-#include <vcs/widgets/standardvcslocationwidget.h>
-#include <vcs/dvcs/dvcsjob.h>
-#include <vcs/vcsstatusinfo.h>
-#include <interfaces/contextmenuextension.h>
-#include <interfaces/context.h>
+#include <kdevplatform/vcs/widgets/standardvcslocationwidget.h>
+#include <kdevplatform/vcs/dvcs/dvcsjob.h>
+#include <kdevplatform/vcs/vcsstatusinfo.h>
+#include <kdevplatform/interfaces/contextmenuextension.h>
+#include <kdevplatform/interfaces/context.h>
 
 #include "utilities.h"
 #include "importmetadatawidget.h"

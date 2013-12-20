@@ -5,8 +5,8 @@
 
 #include <KUrl>
 
-#include <vcs/vcsevent.h>
-#include <vcs/interfaces/ibasicversioncontrol.h>
+#include <kdevplatform/vcs/vcsevent.h>
+#include <kdevplatform/vcs/interfaces/ibasicversioncontrol.h>
 
 namespace KDevelop
 {

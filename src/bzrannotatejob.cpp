@@ -1,4 +1,3 @@
-
 #include "bzrannotatejob.h"
 
 #include <functional>
@@ -7,11 +6,10 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QDir>
 
-#include <vcs/dvcs/dvcsjob.h>
-#include <vcs/vcsannotation.h>
-#include <vcs/vcsrevision.h>
+#include <kdevplatform/vcs/dvcs/dvcsjob.h>
+#include <kdevplatform/vcs/vcsannotation.h>
+#include <kdevplatform/vcs/vcsrevision.h>
 #include <kdevplatform/interfaces/iplugin.h>
-#include <KDebug>
 
 BzrAnnotateJob::BzrAnnotateJob(const QDir& workingDir, const QString& revisionSpec, const KUrl& localLocation, KDevelop::IPlugin* parent, KDevelop::OutputJob::OutputJobVerbosity verbosity)
     : VcsJob(parent, verbosity), _workingDir(workingDir), _revisionSpec(revisionSpec), _localLocation(localLocation), _vcsPlugin(parent), _status(KDevelop::VcsJob::JobNotStarted)
@@ -51,7 +49,7 @@ void BzrAnnotateJob::parseBzrAnnotateOutput(KDevelop::DVcsJob* job)
 
 void BzrAnnotateJob::parseNextLine()
 {
-    if (_currentLine == _outputLines.size()) {
+    if (_currentLine == static_cast<decltype(_currentLine)>(_outputLines.size())) {
         _status = KDevelop::VcsJob::JobSucceeded;
         emitResult();
         emit resultsReady(this);
@@ -110,7 +108,7 @@ void BzrAnnotateJob::parseBzrLog(KDevelop::DVcsJob* job)
         if (!atMessage) {
             if (line.startsWith("revno")) {
                 QString revno = line.mid(QString("revno: ").length());
-                revno=revno.left(revno.indexOf(' '));
+                revno = revno.left(revno.indexOf(' '));
                 revision = revno.toULong();
                 KDevelop::VcsRevision revision;
                 revision.setRevisionValue(revno.toLongLong(), KDevelop::VcsRevision::GlobalNumber);

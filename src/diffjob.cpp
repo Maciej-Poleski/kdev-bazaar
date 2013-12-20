@@ -2,8 +2,8 @@
 
 #include <QtCore/QDir>
 
-#include <vcs/dvcs/dvcsjob.h>
-#include <vcs/vcsdiff.h>
+#include <kdevplatform/vcs/dvcs/dvcsjob.h>
+#include <kdevplatform/vcs/vcsdiff.h>
 
 #include "bazaarplugin.h"
 

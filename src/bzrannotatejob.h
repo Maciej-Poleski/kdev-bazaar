@@ -1,16 +1,16 @@
-
 #ifndef BZRANNOTATETASK_H
 #define BZRANNOTATETASK_H
 
 #include <unordered_map>
 
-#include <QObject>
-#include <QStringList>
-#include <QDir>
+#include <QtCore/QObject>
+#include <QtCore/QStringList>
+#include <QtCore/QDir>
 
-#include <vcs/vcsevent.h>
-#include <vcs/vcsjob.h>
 #include <KUrl>
+
+#include <kdevplatform/vcs/vcsevent.h>
+#include <kdevplatform/vcs/vcsjob.h>
 
 class QDir;
 namespace KDevelop
@@ -23,7 +23,7 @@ class BzrAnnotateJob : public KDevelop::VcsJob
     Q_OBJECT
 public:
 
-    explicit BzrAnnotateJob(const QDir& workingDir, const QString& revisionSpec, const KUrl &localLocation, KDevelop::IPlugin* parent = 0, OutputJobVerbosity verbosity = OutputJob::Verbose);
+    explicit BzrAnnotateJob(const QDir& workingDir, const QString& revisionSpec, const KUrl& localLocation, KDevelop::IPlugin* parent = 0, OutputJobVerbosity verbosity = OutputJob::Verbose);
 
     virtual QVariant fetchResults() override;
     virtual void start() override;
@@ -43,14 +43,14 @@ private:
     QDir _workingDir;
     QString _revisionSpec;
     KUrl _localLocation;
-    KDevelop::IPlugin *_vcsPlugin;
+    KDevelop::IPlugin* _vcsPlugin;
 
     JobStatus _status;
     QPointer<KJob> _job;
 
     QStringList _outputLines;
     std::size_t _currentLine;
-    std::unordered_map<std::size_t,KDevelop::VcsEvent> _commits;
+    std::unordered_map<std::size_t, KDevelop::VcsEvent> _commits;
     QVariantList _results;
 };
 
