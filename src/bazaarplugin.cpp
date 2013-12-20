@@ -64,16 +64,12 @@ VcsJob* BazaarPlugin::annotate(const KUrl& localLocation, const VcsRevision& rev
 
 VcsJob* BazaarPlugin::commit(const QString& message, const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-    if (recursion == Recursive) {
-        QDir dir = workingCopy(localLocations[0]);
-        DVcsJob* job = new DVcsJob(dir, this);
-        job->setType(VcsJob::Commit);
+    QDir dir = workingCopy(localLocations[0]);
+    DVcsJob* job = new DVcsJob(dir, this);
+    job->setType(VcsJob::Commit);
 
-        *job << "bzr" << "commit" << localLocations << "-m" << message;
-        return job;
-    } else {
-        // TODO: Consider this situation
-    }
+    *job << "bzr" << "commit" << handleRecursion(localLocations, recursion) << "-m" << message;
+    return job;
 }
 
 VcsJob* BazaarPlugin::copy(const KUrl& localLocationSrc, const KUrl& localLocationDstn)
@@ -225,7 +221,7 @@ void BazaarPlugin::parseBzrRoot(DVcsJob* job)
 
 VcsJob* BazaarPlugin::resolve(const KUrl::List& localLocations, IBasicVersionControl::RecursionMode recursion)
 {
-    return add(localLocations,recursion);
+    return add(localLocations, recursion);
     // How to provide "a conflict solving dialog to the user"?
     // In any case this plugin is unable to make any conflict.
 }
@@ -234,7 +230,7 @@ VcsJob* BazaarPlugin::revert(const KUrl::List& localLocations, IBasicVersionCont
 {
     DVcsJob* job = new DVcsJob(workingCopy(localLocations[0]), this);
     job->setType(VcsJob::VcsJob::Revert);
-    *job << "bzr" << "revert" << handleRecursion(localLocations,recursion);
+    *job << "bzr" << "revert" << handleRecursion(localLocations, recursion);
     return job;
 }
 
@@ -283,7 +279,7 @@ VcsJob* BazaarPlugin::update(const KUrl::List& localLocations, const VcsRevision
     // recursion and file locations are ignored - we can update only whole
     // working copy
     job->setType(VcsJob::VcsJob::Update);
-    *job << "bzr" << "pull"<<getRevisionSpec(rev);
+    *job << "bzr" << "pull" << getRevisionSpec(rev);
     return job;
 }
 
