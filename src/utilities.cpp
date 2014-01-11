@@ -207,6 +207,7 @@ KDevelop::VcsItemEvent::Action parseActionDescription(const QString& action)
     } else {
         qCritical("Unsupported action: %s at line %{line} in file %{file}."
                   " Please report this.", action.toLocal8Bit().constData());
+        return KDevelop::VcsItemEvent::Action();
     }
 }
 
