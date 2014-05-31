@@ -120,6 +120,7 @@ bool BazaarPlugin::isVersionControlled(const KUrl& localLocation)
     QDir workCopy = workingCopy(localLocation);
     DVcsJob* job = new DVcsJob(workCopy, this, OutputJob::Silent);
     job->setType(VcsJob::Unknown);
+    job->setIgnoreError(true);
     *job << "bzr" << "ls" << "--from-root" << "-R" << "-V";
     job->exec();
     if (job->status() == VcsJob::JobSucceeded) {
